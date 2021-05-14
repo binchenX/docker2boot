@@ -35,4 +35,5 @@ Boot the `disk.img`
 make boot
 ```
 
-You can login the console with `root:root`.
+You can login the console with `root:root` and `curl www.google.com`. VM is
+ready for use.

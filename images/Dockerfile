@@ -22,5 +22,24 @@ RUN apt-get install --no-install-recommends -y \
         systemd \
         systemd-sysv
 
-# install other packages
+# user spaces service & packages
+#
+# Enable essential services
+RUN systemctl enable systemd-networkd.service
+
+# for debug
 RUN echo 'root:root' | chpasswd
+
+# Install essential and utility packages
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        # Essential packages
+        # we use netplan to configure network
+        netplan.io \
+        # utility packages
+        curl \
+        dnsutils \
+        iproute2
+
+# configs for essential services
+COPY tree/ /

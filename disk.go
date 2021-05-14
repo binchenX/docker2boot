@@ -233,8 +233,10 @@ func setupRootfs(g *guestfs.Guestfs, device string, diskLayout *DiskLayout) {
 
 }
 
-// set up fstab - call this after copyRootfsData
+// 1. set up fstab - call this after copyRootfsData
+// 2. "fix" the side-effect caused by docker create container
 func createAdditionalSettings(g *guestfs.Guestfs, diskLayout *DiskLayout) {
+	// 1. set up fstab using diskLayout
 	var fstabEntries []string
 	for _, p := range diskLayout.Partitions {
 		// we don't mount boot partition, systemd is taking care of
@@ -247,6 +249,12 @@ func createAdditionalSettings(g *guestfs.Guestfs, diskLayout *DiskLayout) {
 	fstabContent := strings.Join(fstabEntries, "\n")
 	log.Printf("/etc/fstab %s\n", fstabContent)
 	g.Write_append("/etc/fstab", []byte(fstabContent))
+
+	// 2. "fix"
+	g.Write("/etc/hosts", []byte("172.0.0.1 localhost\n"))
+	log.Println("[Info] configure nameservers")
+	g.Write("/etc/resolv.conf", []byte("nameserver 127.0.0.1\nnameserver 8.8.8.8\n"))
+	g.Rm_f("/.dockerenv")
 }
 
 func copyRootfsData(g *guestfs.Guestfs, contents *[]Content) error {

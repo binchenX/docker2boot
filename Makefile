@@ -20,6 +20,8 @@ boot:
 	# create a qcow on top of the raw
 	qemu-img create -f qcow2 -b disk.img disk.qcow2 5G
 	qemu-system-x86_64 -nographic -serial mon:stdio --enable-kvm -m 2G \
+		-netdev user,id=mynet0 \
+		-device e1000,netdev=mynet0 \
 		-drive file=disk.qcow2,if=virtio,format=qcow2
 clean:
 	rm docker2boot

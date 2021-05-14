@@ -6,12 +6,17 @@ import (
 )
 
 func main() {
-	pImage := flag.String("image", "binc/myos:0.1", "the os base image")
+	pImage := flag.String("image", "", "the os base image")
 	pOut := flag.String("output", "disk.img", "the output bootable disk image")
 	pDebug := flag.Bool("debug", false, "enable debug message")
 	layoutFile := flag.String("diskLayout", "", "disk partitions layout, if not provided use the default")
 
 	flag.Parse()
+
+	if pImage == nil {
+		log.Fatalf("must specify a docker image")
+		flag.Usage()
+	}
 
 	log.Printf("Create boot image from base %s\n", *pImage)
 

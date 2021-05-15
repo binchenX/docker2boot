@@ -1,0 +1,24 @@
+---
+kernel: 5.4.0-58
+ubuntuVersion: 20.04
+login: root:root
+packages:
+  - curl
+  - iproute2
+  - netplan.io
+systemd:
+  units:
+    - name: "sytemd-networkd.service"
+      enabled: true
+files:
+  - path: /etc/netplan/99_config.yaml
+    mode: 0664
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          qemu:
+            dhcp4: true
+            match:
+              name: en*

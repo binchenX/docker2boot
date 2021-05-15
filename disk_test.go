@@ -6,6 +6,9 @@ import (
 	"testing"
 )
 
+func TestBuildImage(t *testing.T) {
+	BuildImageFromConfig()
+}
 func TestSortMount(t *testing.T) {
 	layout := DiskLayout{
 		Partitions: []Partition{

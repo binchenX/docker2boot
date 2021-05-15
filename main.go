@@ -6,16 +6,19 @@ import (
 )
 
 func main() {
-	pImage := flag.String("image", "", "the os base image")
+	pImage := flag.String("image", "", "the user specified os base image")
 	pOut := flag.String("output", "disk.img", "the output bootable disk image")
 	pDebug := flag.Bool("debug", false, "enable debug message")
 	layoutFile := flag.String("diskLayout", "", "disk partitions layout, if not provided use the default")
 
 	flag.Parse()
 
-	if pImage == nil {
-		log.Fatalf("must specify a docker image")
-		flag.Usage()
+	if *pImage == "" {
+		imageId, err := BuildImageFromConfig()
+		if err != nil {
+			log.Fatalf("Fail to create image %s with built-in setup\n", err)
+		}
+		*pImage = imageId
 	}
 
 	log.Printf("Create boot image from base %s\n", *pImage)
@@ -39,6 +42,8 @@ func main() {
 		Name: *pOut,
 		Size: 2 * GB,
 	}
+
+	// build the imgage from the config
 
 	outTar, err := UnpackDockerImage(*pImage)
 	if err != nil {

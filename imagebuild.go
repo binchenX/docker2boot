@@ -190,10 +190,11 @@ func generateFilesIfAny(c *Config, dir string) {
 			}
 		}
 		targetFile := path.Join(dir, f.Path)
-		if err := os.MkdirAll(path.Dir(targetFile), os.FileMode(perm)); err != nil {
+		// dir need the x bits for owner (a.k.a need the 7) so that owner can read the conents
+		// so 775 is the correct permission for directoryies
+		if err := os.MkdirAll(path.Dir(targetFile), 0775); err != nil {
 			log.Fatalf("Fail to create dir for files %s\n", err)
 		}
-
 		if err := os.WriteFile(targetFile, []byte(f.Content), os.FileMode(perm)); err != nil {
 			log.Fatalf("Fail to create file %s %s\n", f.Path, err)
 		}

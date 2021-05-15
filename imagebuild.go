@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -44,7 +45,7 @@ RUN apt-get install --no-install-recommends -y \
         systemd-sysv
 
 # todo: handle {{.Systemd}}
-RUN systemctl enable systemd-networkd
+RUN systemctl enable systemd-networkd.service
 
 # handle login
 {{ if .Login }}
@@ -56,6 +57,12 @@ RUN echo '{{.Login}}' | chpasswd
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
 	{{ join .Packages " "}}
+{{end}}
+
+# handle files
+# files are created first in buildcontext/tree
+{{ if .Files }}
+COPY tree/ /
 {{end}}
 `
 
@@ -82,7 +89,11 @@ func BuildImageFromConfig(c *Config) (string, error) {
 		log.Fatal(err)
 	}
 
-	dockerfileContent := generateDockerfile(c)
+	// create "${tmpDir}/tree" for files in c.Files
+	// and in dockerfile they will be copied over using COPY tree/ /
+	generateFilesIfAny(c, path.Join(tmpDir, "tree"))
+
+	dockerfileContent := generateDockerfileContent(c)
 	log.Printf("[info] dockerfile content is %s\n", dockerfileContent)
 
 	dockerfile, err := os.Create(path.Join(tmpDir, "Dockerfile"))
@@ -147,10 +158,8 @@ func BuildImageFromConfig(c *Config) (string, error) {
 }
 
 // generate dockerfile using config from template
-func generateDockerfile(c *Config) string {
-
+func generateDockerfileContent(c *Config) string {
 	var funcs = template.FuncMap{"join": strings.Join}
-
 	w := bytes.NewBufferString("")
 	log.Printf("dockerfile %#v \n", *c)
 	tmpl, err := template.New("dockerfile").Funcs(funcs).Parse(base)
@@ -162,4 +171,33 @@ func generateDockerfile(c *Config) string {
 	}
 
 	return w.String()
+}
+
+// generate files in dir using content from Config.Files
+func generateFilesIfAny(c *Config, dir string) {
+	if len(c.Files) == 0 {
+		return
+	}
+
+	for _, f := range c.Files {
+		// default set as 0644
+		var perm uint64 = 0644
+		var err error
+		if f.Mode != "" {
+			perm, err = strconv.ParseUint(f.Mode, 8, 0)
+			if err != nil {
+				log.Fatalf("Fail to parse file mode %s %s\n", f.Path, f.Mode)
+			}
+		}
+		targetFile := path.Join(dir, f.Path)
+		if err := os.MkdirAll(path.Dir(targetFile), os.FileMode(perm)); err != nil {
+			log.Fatalf("Fail to create dir for files %s\n", err)
+		}
+
+		if err := os.WriteFile(targetFile, []byte(f.Content), os.FileMode(perm)); err != nil {
+			log.Fatalf("Fail to create file %s %s\n", f.Path, err)
+		}
+
+		log.Printf("[Info] create file %s mode %s\n", f.Path, f.Mode)
+	}
 }

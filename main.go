@@ -7,21 +7,29 @@ import (
 
 func main() {
 	pImage := flag.String("image", "", "the user specified os base image")
+	pConfig := flag.String("config", "", "the yaml config")
 	pOut := flag.String("output", "disk.img", "the output bootable disk image")
 	pDebug := flag.Bool("debug", false, "enable debug message")
 	layoutFile := flag.String("diskLayout", "", "disk partitions layout, if not provided use the default")
 
 	flag.Parse()
 
+	if *pImage == "" && *pConfig == "" {
+		log.Printf("Error: should specify either -image or -config")
+		flag.Usage()
+	}
+
 	if *pImage == "" {
-		imageId, err := BuildImageFromConfig()
+		config, _ := getConfigFromFile(*pConfig)
+		log.Printf("config %#v\n", config)
+		imageId, err := BuildImageFromConfig(config)
 		if err != nil {
 			log.Fatalf("Fail to create image %s with built-in setup\n", err)
 		}
 		*pImage = imageId
 	}
 
-	log.Printf("Create boot image from base %s\n", *pImage)
+	log.Printf("[Info] Create boot image from docker image %s\n", *pImage)
 
 	var layout *DiskLayout
 	if *layoutFile != "" {

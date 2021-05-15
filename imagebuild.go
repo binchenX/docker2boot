@@ -2,13 +2,16 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"strings"
+	"text/template"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -16,12 +19,12 @@ import (
 )
 
 // base dockerfile and we'll add package on top of it
-var base = `FROM ubuntu:20.04 AS ubuntu
+var base = `FROM ubuntu:{{.UbuntuVersion}} AS ubuntu
 
 ENV DEBIAN_FRONTEND=nointeractive
 
 # for bootloader/grub and kernel image
-ARG KERNEL_VERSION=5.4.0-58
+ARG KERNEL_VERSION={{.Kernel}}
 RUN echo "link_in_boot=no" >> /etc/kernel-img.conf \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -39,6 +42,21 @@ RUN update-initramfs -k ${KERNEL_VERSION}-generic -c
 RUN apt-get install --no-install-recommends -y \
         systemd \
         systemd-sysv
+
+# todo: handle {{.Systemd}}
+RUN systemctl enable systemd-networkd
+
+# handle login
+{{ if .Login }}
+RUN echo '{{.Login}}' | chpasswd
+{{end}}
+
+# handle packages
+{{ if .Packages }}
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+	{{ join .Packages " "}}
+{{end}}
 `
 
 type ResultImageID struct {
@@ -50,7 +68,7 @@ type Attr struct {
 }
 
 // build an image from config and return the image name
-func BuildImageFromConfig() (string, error) {
+func BuildImageFromConfig(c *Config) (string, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -64,12 +82,15 @@ func BuildImageFromConfig() (string, error) {
 		log.Fatal(err)
 	}
 
+	dockerfileContent := generateDockerfile(c)
+	log.Printf("[info] dockerfile content is %s\n", dockerfileContent)
+
 	dockerfile, err := os.Create(path.Join(tmpDir, "Dockerfile"))
 	if err != nil {
 		log.Fatalf("Fail to create a Dockerfile %s\n", err)
 	}
 
-	if _, err := dockerfile.Write([]byte(base)); err != nil {
+	if _, err := dockerfile.Write([]byte(dockerfileContent)); err != nil {
 		log.Fatalf("Fail to write files %s\n", err)
 	}
 
@@ -102,7 +123,11 @@ func BuildImageFromConfig() (string, error) {
 	for scanner.Scan() {
 		message := scanner.Text()
 		// TODO: turn it on
-		// fmt.Println(message)
+		log.Println(message)
+		if strings.Contains(message, "errorDetail") {
+			return "", fmt.Errorf("Faild to create image %s", message)
+		}
+
 		// we didn't enable only ID so expect only one entry with "aux"
 		if strings.Contains(message, "aux") {
 			id := ResultImageID{}
@@ -114,5 +139,27 @@ func BuildImageFromConfig() (string, error) {
 		}
 	}
 
+	if imageId == "" {
+		return "", fmt.Errorf("Faild to create image - no image id genereated, enable debug to see docker build output")
+	}
+
 	return imageId, nil
+}
+
+// generate dockerfile using config from template
+func generateDockerfile(c *Config) string {
+
+	var funcs = template.FuncMap{"join": strings.Join}
+
+	w := bytes.NewBufferString("")
+	log.Printf("dockerfile %#v \n", *c)
+	tmpl, err := template.New("dockerfile").Funcs(funcs).Parse(base)
+	if err != nil {
+		log.Fatalf("Fail to parse the dockerfile template %s\n", err)
+	}
+	if err := tmpl.Execute(w, *c); err != nil {
+		log.Fatalf("Failt to execute the template to generate dockerfile from config %s\n", err)
+	}
+
+	return w.String()
 }

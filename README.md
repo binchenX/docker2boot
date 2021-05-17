@@ -6,7 +6,7 @@ a [config yaml file](./config.yaml)
 ## Build
 
 ```
-sudo apt-get install golang-guestfs-dev libguestfs-tools
+sudo apt-get install golang-guestfs-dev libguestfs-tools cloud-utils
 ```
 
 Add `/usr/share/gocode` to your `GOPATH` to use the libguestfs golang binding

@@ -39,7 +39,10 @@ RUN apt-get update \
         # utility packages
         curl \
         dnsutils \
-        iproute2
+        iproute2 \
+        cloud-init \
+        # required by cloud-init
+        lsb-release
 
 # configs for essential services
 COPY tree/ /

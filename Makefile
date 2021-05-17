@@ -3,8 +3,8 @@ build:
 run:
 	# enable for debug guestfish
 	# export LIBGUESTFS_DEBUG=1 LIBGUESTFS_TRACE=1
-	./docker2boot -image binc/myos:latest -debug
-	#./docker2boot -config config.yaml -debug
+	#./docker2boot -image binc/myos:latest -debug
+	./docker2boot -config config.yaml -debug
 test:
 	# check partitions
 	guestfish add disk.img : run : list_partitions
@@ -27,7 +27,7 @@ boot:
 		-netdev user,id=mynet0 \
 		-device e1000,netdev=mynet0 \
 		-drive file=disk.qcow2,if=virtio,format=qcow2 \
-		-drive file=config.img,if=virtio
+		-drive file=config.img,if=virtio,format=raw
 clean:
 	rm docker2boot
 	rm *.tar -f

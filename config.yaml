@@ -6,6 +6,8 @@ packages:
   - curl
   - iproute2
   - netplan.io
+  - cloud-init
+  - lsb-release
 systemd:
   units:
     - name: "sytemd-networkd.service"

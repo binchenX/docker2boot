@@ -6,11 +6,8 @@ a [config yaml file](./config.yaml)
 ## Build
 
 ```
-sudo apt-get install golang-guestfs-dev libguestfs-tools cloud-utils
+sudo apt-get install libguestfs-tools cloud-utils
 ```
-
-Add `/usr/share/gocode` to your `GOPATH` to use the libguestfs golang binding
-installed in that directory.
 
 `make build` to produce `docker2boot`.
 

@@ -1,5 +1,5 @@
 build:
-	GO111MODULE=off go build .
+	go build .
 run:
 	# enable for debug guestfish
 	# export LIBGUESTFS_DEBUG=1 LIBGUESTFS_TRACE=1

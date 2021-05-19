@@ -29,7 +29,7 @@ func UnpackDockerImage(image string) (string, error) {
 	}
 
 	// create container and export
-	tmpContainer, err := cli.ContainerCreate(ctx, &container.Config{Image: image}, nil, nil, "")
+	tmpContainer, err := cli.ContainerCreate(ctx, &container.Config{Image: image}, nil, nil, nil, "")
 	if err != nil {
 		log.Fatalf("fail to create container from image %s %s", image, err)
 	}

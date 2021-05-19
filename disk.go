@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"libguestfs.org/guestfs"
+	"github.com/binchenx/guestfs"
 )
 
 // create disk image with specified disk layout and source content using libguestfs

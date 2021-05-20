@@ -1,0 +1,9 @@
+{
+  "Description": "Example image originally in QCOW2 format",
+  "Format": "raw",
+  "UserBucket": {
+    "S3Bucket": "devicu-ami",
+    "S3Key": "disk.img"
+  }
+}
+

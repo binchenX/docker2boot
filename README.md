@@ -1,7 +1,27 @@
 # docker2boot
 
-`docker2boot` creates a bootable disk from either an [docker image](./images) or
+`docker2boot` creates a bootable disk from either a [Docker image](./images) or
 a [config yaml file](./config.yaml)
+
+
+## Features
+
+|           | status  |
+| --------- |---------|
+| dns       | Y       |
+| cloud-init| Y       |
+| network   | Y       |
+| ssh       | TODO    |
+
+## Platforms
+
+|           | bios| uefi |console| network|
+| --------- |-----|------|-------|--------|
+| qemu      | Y   | Y    |  Y    |   Y    |
+| openstack | Y   | Y    |  Y    |   Y    |
+| aws       | Y   | y    |  Y    |   Y    |
+| gce       | todo| todo | todo  | todo    |
+
 
 ## Build
 
@@ -13,19 +33,19 @@ sudo apt-get install libguestfs-tools cloud-utils
 
 ## Run and boot
 
+### prerequisite
+
 To run guestfish without sudo, use:
 ```
 sudo chmod 0644 /boot/vmlinuz*
 ```
 see [guestfish faq][faq] for more information.
 
-docker2boot support two modes to create a bootable disk.
-1. create from a user specified docker image.
-2. create from a [config yaml](./config.yaml)
+### Run
 
-### 1. create bootable image from a docker image
+### 1. Create bootable image from a [docker image](./images)
 
-Build the reference docker image `binc/myos:lastest`
+(optional) Build the reference docker image `binc/myos:lastest`
 
 ```
 cd ./images
@@ -38,7 +58,7 @@ Convert it to bootable image `disk.img`
 ./docker2boot -image binc/myos:latest -out disk.img
 
 ```
-### 2. create a bootable image from [config yaml](./config.yaml)
+### 2. Create a bootable image from [config yaml](./config.yaml)
 
 ```
 ./docker2boot -config config.yaml -out disk.img

@@ -1,0 +1,7 @@
+aws/
+images/
+user_data
+*.img
+*.qcow
+*.qcow2
+docker2boot

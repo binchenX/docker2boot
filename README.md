@@ -73,4 +73,15 @@ make boot
 You can login the console with `root:root` and `curl www.google.com`. VM is
 ready for use.
 
+## docker image
+
+```
+d2bimage="binc/d2b:v$(cat VERSION)"
+docker run -v $(pwd):$(pwd) \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    ${d2bimage} \
+    -config $(pwd)/config.yaml \
+    -output $(pwd)/disk.img \
+```
+
 [faq]: https://libguestfs.org/guestfs-faq.1.html

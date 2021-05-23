@@ -1,10 +1,15 @@
 build:
-	go build .
+	go build -o bin/docker2boot
+image:
+	docker build --iidfile .iid .
+	docker tag $(shell cat .iid) binc/d2b:v$(shell cat VERSION)
+push:
+	docker push binc/d2b:v$(shell cat VERSION)
 run:
 	# enable for debug guestfish
 	# export LIBGUESTFS_DEBUG=1 LIBGUESTFS_TRACE=1
-	#./docker2boot -image binc/myos:latest -debug
-	./docker2boot -config config.yaml -debug
+	#bin./docker2boot -image binc/myos:latest -debug
+	bin./docker2boot -config config.yaml -debug
 test:
 	# check partitions
 	guestfish add disk.img : run : list_partitions
@@ -29,7 +34,7 @@ boot:
 		-drive file=disk.qcow2,if=virtio,format=qcow2 \
 		-drive file=config.img,if=virtio,format=raw
 clean:
-	rm docker2boot
+	rm bin/docker2boot
 	rm *.tar -f
 	rm disk.img -f
 	rm disk.qcow2 -f
